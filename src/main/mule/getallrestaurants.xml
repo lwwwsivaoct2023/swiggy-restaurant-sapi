@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="getallrestaurants" doc:id="36373bc2-fa05-42a0-b729-90b5b6887b58" >
+		<db:select doc:name="Select" doc:id="22654ad4-cc28-4046-be82-b9788991b6fb" config-ref="Database_Config">
+			<db:sql ><![CDATA[select * from restaurant where name  like  :restaurantname
+LIMIT :limit OFFSET :offset]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	restaurantname: '%'++ vars.name as String default ''  ++ "%",
+	limit: vars.pageSize as Number default  2,
+	offset: (vars.page as Number -1)* vars.pageSize as Number default 0
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="966f444e-ebdc-492a-86ce-555efbca8e1f" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map (item,index) ->{
+	restaurantId: item.restaurant_id,
+	name: item.name,
+	address:{
+		houseNumber: item.house_number,
+		street: item.street,
+		city:item.city,
+		pincode: item.pincode
+	},
+	links:[
+		{
+			linkName: "menus",
+			href: vars.requestUri as String ++ '/' ++ 
+					item.restaurant_id as String++ "/menus"
+		}
+	]
+	
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="1addb2a3-4ca9-48eb-a4b0-4d718b0a6603" />
+	</flow>
+</mule>

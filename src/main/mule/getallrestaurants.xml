@@ -40,6 +40,5 @@ payload map (item,index) ->{
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<logger level="INFO" doc:name="Logger" doc:id="1addb2a3-4ca9-48eb-a4b0-4d718b0a6603" />
 	</flow>
 </mule>

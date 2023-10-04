@@ -8,11 +8,15 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 	<flow name="getallrestaurants" doc:id="36373bc2-fa05-42a0-b729-90b5b6887b58" >
 		<db:select doc:name="Select" doc:id="22654ad4-cc28-4046-be82-b9788991b6fb" config-ref="Database_Config">
 			<db:sql ><![CDATA[select * from restaurant where name  like  :restaurantname
-LIMIT :limit OFFSET :offset]]></db:sql>
-			<db:input-parameters ><![CDATA[#[{
-	restaurantname: '%'++ vars.name as String default ''  ++ "%",
-	limit: vars.pageSize as Number default  2,
-	offset: (vars.page as Number -1)* vars.pageSize as Number default 0
+LIMIT :mylimit OFFSET :myoffset]]></db:sql>
+			<db:input-parameters ><![CDATA[#[%dw 2.0
+var pageSize = (vars.pageSize default 2)  as Number
+var page =  vars.page  default 1 as Number
+---
+{
+	restaurantname: '%' ++ (vars.name default " "  as String) ++ "%",
+	mylimit: pageSize default 2 as Number,
+	myoffset: (page -1)* (pageSize) as Number
 }]]]></db:input-parameters>
 		</db:select>
 		<ee:transform doc:name="Transform Message" doc:id="966f444e-ebdc-492a-86ce-555efbca8e1f" >
@@ -39,6 +43,12 @@ payload map (item,index) ->{
 	
 }]]></ee:set-payload>
 			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="httpStatus" ><![CDATA[%dw 2.0
+output application/java
+---
+200]]></ee:set-variable>
+			</ee:variables>
 		</ee:transform>
 	</flow>
 </mule>

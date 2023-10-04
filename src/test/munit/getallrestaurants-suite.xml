@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="getallrestaurants-suite.xml" >
+		<munit:parameterizations file="getallrestaurantstest\parameters.yaml" />
+	</munit:config>
+	<munit:test name="getallrestaurants-test" doc:id="44cc3a37-ead5-4c15-898b-43234d5fe584" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock Select" doc:id="d779986d-8ca0-43f3-b2d8-a7a55caaf6da" processor="db:select">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="22654ad4-cc28-4046-be82-b9788991b6fb" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[readUrl(Mule::p("mockpayload"))]' mediaType="application/java " encoding="UTF-8" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit:set-event doc:name="Set Input" doc:id="432fbef9-61d2-4cc2-b0d6-704e7fa035a5" >
+				<munit:payload value='#[readUrl(Mule::p("ipayload"))]' encoding="UTF-8" />
+				<munit:attributes value='#[readUrl(Mule::p("iattributes"))]' />
+				<munit:variables >
+					<munit:variable key="pageSize" value='#[output application/java --- Mule::p("ivarpageSize")  as Number]' encoding="UTF-8" mediaType="application/java" />
+					<munit:variable key="name" value='#[output application/java --- Mule::p("ivarname")]' encoding="UTF-8" mediaType="application/java" />
+					<munit:variable key="requestUri" value='#[output application/java --- Mule::p("ivarrequestUri")]' encoding="UTF-8" mediaType="application/java" />
+					<munit:variable key="page" value='#[output application/java --- Mule::p("ivarpage") as Number]' encoding="UTF-8" mediaType="application/java" />
+				</munit:variables>
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to getallrestaurants" doc:id="e573550f-2460-41a9-accd-4de3b2f589a9" name="getallrestaurants"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert doc:name="Assert payload" doc:id="4e10cd4e-90f4-4d2e-8c74-fb89cdb27dcd" message="The payload does not match">
+				<munit-tools:that ><![CDATA[#[%dw 2.0
+import getallrestaurantstest::assert_expression_payload
+---
+assert_expression_payload::main({payload: payload, attributes: attributes, vars: vars})]]]></munit-tools:that>
+			</munit-tools:assert>
+		</munit:validation>
+	</munit:test>
+
+
+</mule>

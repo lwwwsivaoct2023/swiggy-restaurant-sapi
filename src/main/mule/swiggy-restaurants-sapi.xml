@@ -3,7 +3,7 @@
     <http:listener-config name="swiggy-restaurants-sapi-httpListenerConfig">
         <http:listener-connection host="0.0.0.0" port="8081" />
     </http:listener-config>
-    <apikit:config name="swiggy-restaurants-sapi-config" api="resource::d0205d5f-f064-4d78-b0f0-1e4d55cdf281:swiggy-restaurants-sapi:2.0.1:raml:zip:swiggy-restaurants-sapi.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <apikit:config name="swiggy-restaurants-sapi-config" api="resource::d0205d5f-f064-4d78-b0f0-1e4d55cdf281:swiggy-restaurants-sapi:2.0.2:raml:zip:swiggy-restaurants-sapi.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
     <flow name="swiggy-restaurants-sapi-main">
         <http:listener config-ref="swiggy-restaurants-sapi-httpListenerConfig" path="/api/*">
             <http:response statusCode="#[vars.httpStatus default 200]">
@@ -155,9 +155,14 @@ if(attributes.queryParams.pageSize as Number != 0 )
     <flow name="put:\restaurants\(id):application\json:swiggy-restaurants-sapi-config">
         <ee:transform doc:name="Transform Message">
             <ee:variables>
-                <ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+                <ee:set-variable variableName="id"><![CDATA[attributes.uriParams.'id']]></ee:set-variable>
+                <ee:set-variable variableName="originalPayload"><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-variable>
             </ee:variables>
         </ee:transform>
+        <flow-ref doc:name="updaterestaurantbyid" doc:id="f2823ec9-4421-4618-a88e-78aa2f5dfc7c" name="updaterestaurantbyid" />
         <ee:transform doc:name="Transform Message">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
@@ -165,10 +170,34 @@ output application/json
 ---
 {
   status: "200",
-  message: "Restaurant with id {id} is updated"
+  message: "Restaurant with id " ++ vars.id ++" is updated"
 }]]></ee:set-payload>
             </ee:message>
         </ee:transform>
+        <error-handler>
+            <on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="13eaa537-239c-4fc6-85c1-3a442c1295ea" type="APP:RESTAURANT_DOESNOT_EXIST">
+                <ee:transform doc:name="Transform Message" doc:id="4f46d16f-b433-4065-8d5a-7b1c19a9b2bd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+
+"status": "404",
+
+"message": "Restaurant   Not found"
+
+}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[%dw 2.0
+output application/java
+---
+"404"]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
     </flow>
     <flow name="put:\restaurants\(id)\menus\(id)\menuItems\(menuItemId):application\json:swiggy-restaurants-sapi-config">
         <ee:transform doc:name="Transform Message">
@@ -196,16 +225,34 @@ output application/json
                 <ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
             </ee:variables>
         </ee:transform>
+        <flow-ref doc:name="Flow Reference" doc:id="07402081-9ea4-4eaf-a77e-988fbc95d741" name="deleterestaurantbyid" />
+        <ee:transform doc:name="Transform Message" doc:id="552001b9-d916-4576-80bf-5d3b9ca088ca">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
         <ee:transform doc:name="Transform Message">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
-{
+if(payload ==1){
   status: "200",
-  message: "Restaurant with id {id} is Deleted"
+  message: "Restaurant with id " ++ vars.id ++ " is Deleted"
+}else{
+  status: "404",
+  message: "Restaurant with id " ++ vars.id ++ " is Not found"
 }]]></ee:set-payload>
             </ee:message>
+            <ee:variables>
+                <ee:set-variable variableName="httpStatus"><![CDATA[%dw 2.0
+output application/java
+---
+if(payload >=1) "200" else  "404"]]></ee:set-variable>
+            </ee:variables>
         </ee:transform>
     </flow>
     <flow name="delete:\restaurants\(id)\menus\(id)\menuItems\(menuItemId):swiggy-restaurants-sapi-config">
@@ -295,33 +342,14 @@ output application/json
     <flow name="get:\restaurants\(id):swiggy-restaurants-sapi-config">
         <ee:transform doc:name="Transform Message">
             <ee:variables>
-                <ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+                <ee:set-variable variableName="id"><![CDATA[attributes.uriParams.'id']]></ee:set-variable>
+                <ee:set-variable variableName="requestUri"><![CDATA[%dw 2.0
+output application/java
+---
+attributes.requestUri as String]]></ee:set-variable>
             </ee:variables>
         </ee:transform>
-        <ee:transform doc:name="Transform Message">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-  restaurantId: 1,
-  name: "Udupi Garden",
-  address: {
-    addressId: 11,
-    houseNumber: "202",
-    street: "Some Street",
-    city: "Bangalore",
-    pincode: "560066"
-  },
-  links: [
-    {
-      linkName: "menus",
-      href: "http://localhost:8081/restaurants/1/menus"
-    }
-  ]
-}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+        <flow-ref doc:name="getrestaurantbyid" doc:id="fd7a930c-453d-4fc6-b81f-9833d4e4977a" name="getrestaurantbyid" />
     </flow>
     <flow name="get:\restaurants\(id)\menus\(id):swiggy-restaurants-sapi-config">
         <ee:transform doc:name="Transform Message">
@@ -448,24 +476,24 @@ output application/json
         </ee:transform>
     </flow>
     <flow name="post:\restaurants:application\json:swiggy-restaurants-sapi-config">
-        <ee:transform doc:name="Transform Message" doc:id="e6b046aa-e4eb-4f98-bc5a-150725afa13f" >
-			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
+        <ee:transform doc:name="Transform Message" doc:id="e6b046aa-e4eb-4f98-bc5a-150725afa13f">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
 output application/java
 ---
 payload]]></ee:set-payload>
-			</ee:message>
-			<ee:variables >
-				<ee:set-variable variableName="requestUri" ><![CDATA[%dw 2.0
+            </ee:message>
+            <ee:variables>
+                <ee:set-variable variableName="requestUri"><![CDATA[%dw 2.0
 output application/java
 ---
 attributes.requestUri]]></ee:set-variable>
-				<ee:set-variable variableName="originalPayload" ><![CDATA[%dw 2.0
+                <ee:set-variable variableName="originalPayload"><![CDATA[%dw 2.0
 output application/java
 ---
 payload]]></ee:set-variable>
-			</ee:variables>
-		</ee:transform>
-		<flow-ref doc:name="AddRestaurant" doc:id="33562297-a8b2-46c4-a6b0-decd3204418f" name="AddRestaurant"/>
+            </ee:variables>
+        </ee:transform>
+        <flow-ref doc:name="AddRestaurant" doc:id="33562297-a8b2-46c4-a6b0-decd3204418f" name="AddRestaurant" />
     </flow>
 </mule>

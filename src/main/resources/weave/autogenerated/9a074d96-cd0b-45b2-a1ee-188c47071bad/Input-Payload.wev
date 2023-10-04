@@ -1,0 +1,15 @@
+%dw 2.0
+
+type auto_9a074d96_cd0b_45b2_a1ee_188c47071bad_Input_Payload = {
+  address: {
+    pincode: String, 
+    city: String, 
+    street: String, 
+    houseNumber: String, 
+    addressId: Number, 
+    _?: Any
+  }, 
+  name: String, 
+  _?: Any
+}
+

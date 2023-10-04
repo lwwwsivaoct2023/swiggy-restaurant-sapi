@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="getallrestaurants" doc:id="36373bc2-fa05-42a0-b729-90b5b6887b58" >
+		<db:select doc:name="Select" doc:id="22654ad4-cc28-4046-be82-b9788991b6fb" config-ref="Database_Config">
+			<db:sql ><![CDATA[select * from restaurant where name  like  :restaurantname
+LIMIT :mylimit OFFSET :myoffset]]></db:sql>
+			<db:input-parameters ><![CDATA[#[%dw 2.0
+var pageSize = (vars.pageSize default 2)  as Number
+var page =  vars.page  default 1 as Number
+---
+{
+	restaurantname: '%' ++ (vars.name default " "  as String) ++ "%",
+	mylimit: pageSize default 2 as Number,
+	myoffset: (page -1)* (pageSize) as Number
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="966f444e-ebdc-492a-86ce-555efbca8e1f" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+import dw::core::Strings
+---
+payload map (item,index) ->{
+	restaurantId: item.restaurant_id,
+	name: item.name,
+	address:{
+		houseNumber: item.house_number,
+		street: item.street,
+		city:item.city,
+		pincode: item.pincode
+	},
+	links:[
+		{
+			linkName: "menus",
+			href: Strings::substringBefore(vars.requestUri as String,"?")  ++ '/' ++ 
+					item.restaurant_id as String++ "/menus"
+		}
+	]
+	
+}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="httpStatus" ><![CDATA[%dw 2.0
+output application/java
+---
+200]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</flow>
+	<flow name="AddRestaurant" doc:id="9a074d96-cd0b-45b2-a1ee-188c47071bad" >
+		<flow-ref doc:name="isDuplicateRestaurant" doc:id="58e0a01a-4583-471a-bdc7-98be8575fef1" name="isDuplicateRestaurant" target="isDuplicateRestaurant"/>
+		<choice doc:name="Choice" doc:id="dc9eba0a-6c49-4138-978a-a7561af174ff" >
+			<when expression="#[vars.isDuplicateRestaurant]">
+				<ee:transform doc:name="Transform Message" doc:id="571cfceb-956f-42ac-b0e0-5ea8f78d0330" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+
+"status": "409",
+
+"message": "A restaurant with same name" ++ payload.name ++ "already exists"
+
+}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="httpStatus" ><![CDATA[%dw 2.0
+output application/java
+---
+409]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<db:insert doc:name="Insert" doc:id="6ab00a81-77ef-4458-aafe-1c254ed704de" config-ref="Database_Config" autoGenerateKeys="true">
+			<db:sql><![CDATA[
+INSERT INTO restaurant (`name`,`house_number`,`street`,`city`,`pincode`)
+VALUES(:name,:housenumber,:street,:city,:pincode);
+]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	name: payload.name as String,
+	housenumber: payload.address.houseNumber as String,
+	street: payload.address.street as String,
+	city: payload.address.city as String,
+	pincode: payload.address.pincode as String
+}]]]></db:input-parameters>
+			<db:auto-generated-keys-column-names>
+				<db:auto-generated-keys-column-name value="restaurant_id" />
+			</db:auto-generated-keys-column-names>
+		</db:insert>
+				<ee:transform doc:name="Transform Message" doc:id="3ee9e383-b53b-4448-9bae-8267d800c566">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{restaurant_id : payload.generatedKeys.GENERATED_KEY} ++ vars.originalPayload as Object default  {}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="outboundHeaders"><![CDATA[%dw 2.0
+output application/java
+---
+{
+	location: vars.requestUri as String ++ '/' ++ 
+				(payload.generatedKeys.GENERATED_KEY as String) default ""
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="Logger" doc:id="4448ebd4-acc1-4b9b-875a-6a3c17150d7c" message="Added Restaurant"/>
+	</flow>
+	<flow name="isDuplicateRestaurant" doc:id="6da34eb3-bf56-4c6f-8784-24bc7e2aade9" >
+		<db:select doc:name="Select" doc:id="3c37002b-33d7-4353-b8ca-bbe7f58f4c0a" config-ref="Database_Config">
+			<db:sql ><![CDATA[select * from restaurant where name = :name]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	name: payload.name as String
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="3d6711b4-efbe-46df-810e-0a50547ba382" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+sizeOf(payload) >0]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

@@ -85,7 +85,7 @@ var mydata =  if(vars.name=="Eat" and vars.page==1 and vars.pageSize==2)
     "links": [
       {
         "linkName": "menus",
-        "href": "/api/restaurants?page=2&pageSize=2/3/menus"
+        "href": "/api/restaurants/3/menus"
       }
     ]
   }

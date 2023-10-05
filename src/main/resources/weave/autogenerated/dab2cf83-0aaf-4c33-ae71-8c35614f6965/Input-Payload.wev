@@ -1,0 +1,8 @@
+%dw 2.0
+
+type auto_dab2cf83_0aaf_4c33_ae71_8c35614f6965_Input_Payload = {
+  name: String, 
+  restaurantId: Number, 
+  _?: Any
+}
+

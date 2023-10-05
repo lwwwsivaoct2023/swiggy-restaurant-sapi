@@ -81,7 +81,7 @@
 		<dependency>
 			<groupId>d0205d5f-f064-4d78-b0f0-1e4d55cdf281</groupId>
 			<artifactId>swiggy-restaurants-sapi</artifactId>
-			<version>2.0.2</version>
+			<version>2.0.4</version>
 			<classifier>raml</classifier>
 			<type>zip</type>
 		</dependency>

@@ -14,7 +14,7 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 		</db:select>
 		<choice doc:name="Choice" doc:id="5b231602-e07e-4e69-86cb-5c1e3b583ba3">
 			<when expression="#[isEmpty(payload)]">
-				<raise-error doc:name="Raise error" doc:id="00208df1-f55f-4625-b5bc-9a57c8290ea7" type="APP:RESTAURANT_DOESNOT_EXIST" />
+				<raise-error doc:name="Raise error" doc:id="00208df1-f55f-4625-b5bc-9a57c8290ea7" type="APP:DOESNOT_EXIST" description="Restaurant Doen't Exist"/>
 			</when>
 			<otherwise>
 				<ee:transform doc:name="Transform Message" doc:id="a697799c-485c-415c-b451-e14a5e2f56d4">
@@ -51,7 +51,7 @@ where restaurant_id = :id]]></db:sql>
 		</choice>
 	</sub-flow>
 	<flow name="deleterestaurantbyid" doc:id="6f120773-3e2b-4f1f-953a-a48f5dfbcc6a" >
-		<db:delete doc:name="Delete" doc:id="0b2e9572-1c67-4533-ac76-bc664cabd09f" config-ref="Database_Config">
+		<db:delete doc:name="Delete Restaurant by id" doc:id="0b2e9572-1c67-4533-ac76-bc664cabd09f" config-ref="Database_Config">
 			<db:sql ><![CDATA[delete from restaurant where restaurant_id = :id]]></db:sql>
 			<db:input-parameters ><![CDATA[#[{
 	id: vars.id
@@ -65,53 +65,14 @@ where restaurant_id = :id]]></db:sql>
 	id: vars.id as Number 
 }]]]></db:input-parameters>
 		</db:select>
-		<ee:transform doc:name="Transform Message" doc:id="49dfa31f-1eaf-4842-a46d-61f642ba89fe" >
-			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
-output application/json
-import dw::core::Strings
-
-var item = if(sizeOf(payload)==1) payload[0] else {}
----
-if(item == {})
-{
-	
-
-"status": "404",
-
-"message": "Restaurant  with id " ++ vars.id ++ " doesn't exist" 
-
-
-}
-else {
-	restaurantId: item.restaurant_id,
-	name: item.name,
-	address:{
-		houseNumber: item.house_number,
-		street: item.street,
-		city:item.city,
-		pincode: item.pincode
-	},
-	links:[
-		{
-			linkName: "menus",
-			href: Strings::substringBefore(vars.requestUri as String,"?")  ++ '/' ++ 
-					item.restaurant_id as String++ "/menus"
-		}
-	]
-	
-}]]></ee:set-payload>
-			</ee:message>
-			<ee:variables >
-				<ee:set-variable variableName="httpStatus" ><![CDATA[%dw 2.0
-output application/java
----
-if(isEmpty(payload))
-404
-else
-200]]></ee:set-variable>
-			</ee:variables>
-		</ee:transform>
+		<choice doc:name="Choice" doc:id="53afce91-6d33-4347-b98b-680275eb2089" >
+			<when expression="#[isEmpty(payload)]">
+				<raise-error doc:name="Raise error" doc:id="a7366d4b-236a-4774-b736-6d62b0f2a2c3" type="APP:DOESNOT_EXIST" description="Restaurant Doen't Exist"/>
+			</when>
+			<otherwise >
+				<set-payload value="#[payload[0]]" doc:name="Set Retrieved restaurant as payload" doc:id="ef1ed407-8099-441f-8e70-fea37ef0091e" />
+			</otherwise>
+		</choice>
 	</flow>
 	<flow name="getallrestaurants" doc:id="36373bc2-fa05-42a0-b729-90b5b6887b58" >
 		<db:select doc:name="Select" doc:id="22654ad4-cc28-4046-be82-b9788991b6fb" config-ref="Database_Config">
@@ -127,7 +88,7 @@ var page =  vars.page  default 1 as Number
 	myoffset: (page -1)* (pageSize) as Number
 }]]]></db:input-parameters>
 		</db:select>
-		<ee:transform doc:name="Transform Message" doc:id="966f444e-ebdc-492a-86ce-555efbca8e1f" >
+		<ee:transform doc:name="Map Restaurants" doc:id="6f33f1c6-5f02-48dc-8fef-1e182ad934ae" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
@@ -144,8 +105,9 @@ payload map (item,index) ->{
 	},
 	links:[
 		{
-			linkName: "menus",
-			href: Strings::substringBefore(vars.requestUri as String,"?")  ++ '/' ++ 
+			linkName: "menus" ,
+			href: (if(vars.requestUri contains "?") Strings::substringBefore(vars.requestUri as String,"?") 
+			      else vars.requestUri as String  ) ++ '/' ++ 
 					item.restaurant_id as String++ "/menus"
 		}
 	]
@@ -164,26 +126,7 @@ output application/java
 		<flow-ref doc:name="isDuplicateRestaurant" doc:id="58e0a01a-4583-471a-bdc7-98be8575fef1" name="isDuplicateRestaurant" target="isDuplicateRestaurant"/>
 		<choice doc:name="Choice" doc:id="dc9eba0a-6c49-4138-978a-a7561af174ff" >
 			<when expression="#[vars.isDuplicateRestaurant]">
-				<ee:transform doc:name="Transform Message" doc:id="571cfceb-956f-42ac-b0e0-5ea8f78d0330" >
-					<ee:message >
-						<ee:set-payload ><![CDATA[%dw 2.0
-output application/json
----
-{
-
-"status": "409",
-
-"message": "A restaurant with same name" ++ payload.name ++ "already exists"
-
-}]]></ee:set-payload>
-					</ee:message>
-					<ee:variables >
-						<ee:set-variable variableName="httpStatus" ><![CDATA[%dw 2.0
-output application/java
----
-409]]></ee:set-variable>
-					</ee:variables>
-				</ee:transform>
+				<raise-error doc:name="Raise error" doc:id="e9003aee-30c9-4362-a8d6-2ae2d6f31910" type="APP:DUPLICATE_RESTAURANT" description="Restaurant is duplicate "/>
 			</when>
 			<otherwise >
 				<db:insert doc:name="Insert" doc:id="6ab00a81-77ef-4458-aafe-1c254ed704de" config-ref="Database_Config" autoGenerateKeys="true">
@@ -202,23 +145,6 @@ VALUES(:name,:housenumber,:street,:city,:pincode);
 				<db:auto-generated-keys-column-name value="restaurant_id" />
 			</db:auto-generated-keys-column-names>
 		</db:insert>
-				<ee:transform doc:name="Transform Message" doc:id="3ee9e383-b53b-4448-9bae-8267d800c566">
-			<ee:message>
-				<ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{restaurant_id : payload.generatedKeys.GENERATED_KEY} ++ vars.originalPayload as Object default  {}]]></ee:set-payload>
-			</ee:message>
-			<ee:variables>
-				<ee:set-variable variableName="outboundHeaders"><![CDATA[%dw 2.0
-output application/java
----
-{
-	location: vars.requestUri as String ++ '/' ++ 
-				(payload.generatedKeys.GENERATED_KEY as String) default ""
-}]]></ee:set-variable>
-			</ee:variables>
-		</ee:transform>
 			</otherwise>
 		</choice>
 		<logger level="INFO" doc:name="Logger" doc:id="4448ebd4-acc1-4b9b-875a-6a3c17150d7c" message="Added Restaurant"/>

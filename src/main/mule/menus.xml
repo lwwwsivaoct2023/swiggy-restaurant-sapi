@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<sub-flow name="checkIfRestaurantExists" doc:id="b236e3a4-23e8-4d48-8c7c-cc7d612dce15" >
+		<db:select doc:name="Select" doc:id="272bbfbd-bd8d-499f-9d4d-5c40b21d0ccb" config-ref="Database_Config">
+			<db:sql><![CDATA[select * from restaurant where restaurant_id = :id ]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	id: vars.id as Number 
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="9fc9672d-8d67-4fec-a101-d6f93d0e0266" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="isRestaurantExisting" ><![CDATA[%dw 2.0
+output application/java
+---
+(sizeOf(payload)>=1) as Boolean]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="b67c0e26-5e82-4d4e-ad2e-3be65fd2dc26" >
+			<when expression="#[vars.isRestaurantExisting == false]" >
+				<raise-error doc:name="Raise error" doc:id="3e31583a-e758-4f67-99c0-e7edc0d6f6a7" type="APP:DOESNOT_EXIST" description="Restaurant Doen't Exist" />
+			</when>
+			<otherwise>
+				<logger level="INFO" doc:name="Logger" doc:id="8459b32e-5c91-4985-aff1-aa17d0a0c8e9" message="Restaurant Exists!!"/>
+			</otherwise>
+		</choice>
+	</sub-flow>
+	<flow name="getallmenusofarestaurant" doc:id="947bd903-8459-4859-88e1-158a460d13d6" >
+		<flow-ref doc:name="checkIfRestaurantExists" doc:id="ade9d37f-0e6d-49bc-a783-dd9d9b597d16" name="checkIfRestaurantExists"/>
+		<db:select doc:name="Select" doc:id="f251b365-5d2a-42f6-a11c-75cf63e74785" config-ref="Database_Config">
+			<db:sql><![CDATA[select * from menu where restaurant_id = :restaurantid 
+LIMIT :mylimit OFFSET :myoffset]]></db:sql>
+			<db:input-parameters><![CDATA[#[%dw 2.0
+var pageSize = (vars.pageSize default 2)  as Number
+var page =  vars.page  default 1 as Number
+---
+{
+	restaurantid: vars.id,
+	mylimit: pageSize default 2 as Number,
+	myoffset: (page -1)* (pageSize) as Number
+}]]]></db:input-parameters>
+		</db:select>
+	</flow>
+	<flow name="AddAnewMenu" doc:id="dab2cf83-0aaf-4c33-ae71-8c35614f6965" >
+		<flow-ref doc:name="checkIfRestaurantExists" doc:id="a10bc46a-2def-4309-8112-7d4faf092b3b" name="checkIfRestaurantExists" target="isRestaurantExisting"/>
+		<db:insert doc:name="Add New Menu" doc:id="5250e1d5-7235-4c77-8245-03daf9231704" config-ref="Database_Config" autoGenerateKeys="true">
+			<db:sql><![CDATA[INSERT INTO menu(`menu_name`,`restaurant_id`)
+values(:menuName,:restaurantId)]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	menuName: vars.originalPayload.name as String,
+	restaurantId: vars.id 
+}]]]></db:input-parameters>
+					<db:auto-generated-keys-column-names>
+						<db:auto-generated-keys-column-name value="menu_id" />
+					</db:auto-generated-keys-column-names>
+		</db:insert>
+	</flow>
+	<flow name="getmenubymenuId" doc:id="da70a09c-a242-4479-9211-ada9bed865f7" >
+		<db:select doc:name="Select" doc:id="ff83452c-01aa-44ec-bee9-e136fcc89541" config-ref="Database_Config">
+			<db:sql ><![CDATA[select * from menu where menu_id =:menuId 
+and restaurant_id=:restaurantId]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	menuId: vars.menuId as Number,
+	restaurantId: vars.id as Number
+}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Choice" doc:id="1170f4b4-dc17-4e5e-99fe-cfef9b14a8e0" >
+			<when expression="#[isEmpty(payload)]" >
+				<raise-error doc:name="Raise error" doc:id="abba9918-1d3b-4738-9ad8-e6cae6dd4f1a" type="APP:DOESNOT_EXIST" description="Either Restaurant or Menu Doen't Exist" />
+			</when>
+			<otherwise >
+				<set-payload value="#[payload[0]]" doc:name="Set Retrieved Menuas payload" doc:id="902811b4-2d75-490f-84ca-f59e3e11b66e" />
+			</otherwise>
+		</choice>
+	</flow>
+	<sub-flow name="checkIfMenuExists" doc:id="5a04ea0d-af01-47e4-9e29-5989bfdd5eaa" >
+		<db:select doc:name="Select" doc:id="de6c1499-7f27-4bb8-bd07-e192582994c0" config-ref="Database_Config" >
+			<db:sql ><![CDATA[select * from menu where menu_id = :menuId]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	menuId: vars.menuId as Number 
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="a3f75578-25e7-4556-a318-b0dd55e73581" >
+			<ee:message />
+			<ee:variables >
+				<ee:set-variable variableName="isMenuExisting" ><![CDATA[%dw 2.0
+output application/java
+---
+(sizeOf(payload)>=1) as Boolean]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="e3806044-3f2a-4aeb-a220-52d4e797d8b4" >
+			<when expression="#[vars.isMenuExisting == false]" >
+				<raise-error doc:name="Raise error" doc:id="ab81172a-d6e3-4b5e-a6e1-2ae14820164b" type="APP:DOESNOT_EXIST" description="Menu Doesn't Exist" />
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Logger" doc:id="92df0ec1-d53b-4298-ac1f-ee52ad22fe02" message="Menu Exists!!" />
+			</otherwise>
+		</choice>
+	</sub-flow>
+</mule>

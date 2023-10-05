@@ -1,0 +1,10 @@
+%dw 2.0
+
+type auto_e940019f_1ab6_49cd_aac6_6d029fc1c319_Input_Payload = {
+  itemName: String, 
+  price: Number, 
+  description: String, 
+  menuId: Number, 
+  _?: Any
+}
+

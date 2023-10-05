@@ -1,0 +1,11 @@
+%dw 2.0
+
+type auto_5a04ea0d_af01_47e4_9e29_5989bfdd5eaa_Input_Payload = Array<{|  restaurant_id: Number,   name?: String,   house_number?: String,   street?: String,   city?: String,   pincode?: String|}> | org_mule_extension_db_api_StatementResult
+type org_mule_extension_db_api_StatementResult = {|
+  affectedRows?: Number, 
+  generatedKeys?: { _?: Number }
+|} {"typeAlias": "StatementResult",
+"typeId": "org.mule.extension.db.api.StatementResult"}
+
+
+

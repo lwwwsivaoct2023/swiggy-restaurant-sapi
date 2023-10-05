@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="getallmenuItemsbymenuid" doc:id="b498b1e9-ced9-444a-bad4-6654ec3851ec" >
+		<flow-ref doc:name="checkIfRestaurantExists" doc:id="e54ea1c9-ce42-4a63-b084-9f4631eaa61c" name="checkIfRestaurantExists"/>
+		<flow-ref doc:name="checkIfMenuExists" doc:id="f61721b6-240b-4f05-8374-ba035de52424" name="checkIfMenuExists"/>
+		<db:select doc:name="Select" doc:id="d0f02f5f-695c-4a6c-be1a-0a414ecf7b37" config-ref="Database_Config">
+			<db:sql ><![CDATA[select * from menu_items where menu_id = :menuId]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	menuId: vars.menuId as Number
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="22c53ca0-b495-439e-82a7-f2c35b0b4fb4" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map (item)->{
+	menuItemId: item.menu_item_id,
+  itemName: item.item_name,
+  description: item.item_description,
+  price: item.price,
+  menuId: item.menu_id,
+   "links": [
+    {
+      "linkName": "menu",
+      "href": "/api/restaurants" ++ vars.id as String ++"/menus/" ++ vars.menuId as String
+    },
+    {
+      "linkName": "menuItemInventory",
+      "href": "/api/restaurants" ++ vars.id as String ++"/menus/" ++ vars.menuId as String 
+      			++ "/menuItems/" ++ item.menu_item_id ++ "/inventory"
+    }
+    
+    ]
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="AddaNewMenuItem" doc:id="e940019f-1ab6-49cd-aac6-6d029fc1c319" >
+		<db:insert doc:name="Insert" doc:id="e92a3c97-f683-48c4-827c-c2d99ff4daf8" config-ref="Database_Config" autoGenerateKeys="true">
+			<db:sql ><![CDATA[INSERT INTO menu_items(`item_name`,`item_description`,`price`,`menu_id`)
+values(:itemName,:description,:price,:menuId)]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+  "itemName": payload.itemName as String,
+  "description": payload.description as String,
+  "price": payload.price as Number,
+  "menuId": payload.menuId as Number
+}]]]></db:input-parameters>
+			<db:auto-generated-keys-column-names >
+				<db:auto-generated-keys-column-name value="menu_item_id" />
+			</db:auto-generated-keys-column-names>
+		</db:insert>
+	</flow>
+</mule>

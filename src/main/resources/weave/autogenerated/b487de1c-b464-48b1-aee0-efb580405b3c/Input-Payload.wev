@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_b487de1c_b464_48b1_aee0_efb580405b3c_Input_Payload = Array<{|  menu_id: Number,   menu_name?: String,   restaurant_id?: Number|}>
+

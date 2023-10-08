@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_f15e1c02_4cb8_4e63_9d29_c52ac8e43f45_Output_Payload = Array<{|  menu_item_id: Number,   quantity?: Number,   discount_percentage?: Number|}>
+

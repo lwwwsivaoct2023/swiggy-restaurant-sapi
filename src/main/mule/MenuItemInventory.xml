@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<flow name="getMenuItemInventoryByMenuItemId" doc:id="f15e1c02-4cb8-4e63-9d29-c52ac8e43f45" >
+		<flow-ref doc:name="checkIfRestaurantExists" doc:id="279edd86-402b-4fb0-ba4b-749e2d54d796" name="checkIfRestaurantExists"/>
+		<flow-ref doc:name="checkIfMenuExists" doc:id="a37751ea-97f1-4c7b-be86-e22b7e1c5166" name="checkIfMenuExists"/>
+		<flow-ref doc:name="checkIfMenuItemExists" doc:id="8d05ba8b-3985-4289-8b5e-010cf72d1648" name="checkIfMenuItemExists"/>
+		<db:select doc:name="Select" doc:id="16064e86-6b81-450f-bed5-419b2768e890" config-ref="Database_Config">
+			<db:sql ><![CDATA[select * from menuitem_inventory where menu_item_id = :menuItemId]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	menuItemId: vars.menuItemId as Number
+}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Choice" doc:id="212599e4-35e0-4fea-99bc-424159bcbe90" >
+			<when expression="#[isEmpty(payload)]" >
+				<raise-error doc:name="Raise error" doc:id="9b104797-e484-4655-b661-3953e1b14e6e" type="APP:DOESNOT_EXIST" description="MenuItemInventory Doen't Exist" />
+			</when>
+			<otherwise >
+				<set-payload value="#[payload[0]]" doc:name="Set Retrieved MenuItemInventory as payload" doc:id="638db366-2f07-4446-8c0b-a64845438462" />
+			</otherwise>
+		</choice>
+	</flow>
+</mule>

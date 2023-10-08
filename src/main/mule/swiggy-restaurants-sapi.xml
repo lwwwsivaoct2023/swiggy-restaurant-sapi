@@ -3,7 +3,7 @@
     <http:listener-config name="swiggy-restaurants-sapi-httpListenerConfig">
         <http:listener-connection host="0.0.0.0" port="8081" />
     </http:listener-config>
-    <apikit:config name="swiggy-restaurants-sapi-config" api="resource::d0205d5f-f064-4d78-b0f0-1e4d55cdf281:swiggy-restaurants-sapi:2.0.4:raml:zip:swiggy-restaurants-sapi.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <apikit:config name="swiggy-restaurants-sapi-config" api="resource::d0205d5f-f064-4d78-b0f0-1e4d55cdf281:swiggy-restaurants-sapi:2.0.5:raml:zip:swiggy-restaurants-sapi.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
     <flow name="swiggy-restaurants-sapi-main">
         <http:listener config-ref="swiggy-restaurants-sapi-httpListenerConfig" path="/api/*">
             <http:response statusCode="#[vars.httpStatus default 200]">
@@ -181,7 +181,7 @@ output application/json
                 <ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
             </ee:variables>
         </ee:transform>
-        <flow-ref doc:name="Flow Reference" doc:id="07402081-9ea4-4eaf-a77e-988fbc95d741" name="deleterestaurantbyid" />
+        <flow-ref doc:name="deleterestaurantbyid" doc:id="07402081-9ea4-4eaf-a77e-988fbc95d741" name="deleterestaurantbyid" />
         <ee:transform doc:name="Transform Message" doc:id="552001b9-d916-4576-80bf-5d3b9ca088ca">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
@@ -415,13 +415,18 @@ output application/java
         </error-handler>
     </flow>
     <flow name="put:\restaurants\(id)\menus\(menuId)\menuItems\(menuItemId):application\json:swiggy-restaurants-sapi-config">
-        <ee:transform doc:name="Transform Message">
+        <ee:transform doc:name="Set uriparams and originalPaylod variables">
             <ee:variables>
-                <ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
-                <ee:set-variable variableName="menuId">attributes.uriParams.'menuId'</ee:set-variable>
-                <ee:set-variable variableName="menuItemId">attributes.uriParams.'menuItemId'</ee:set-variable>
+                <ee:set-variable variableName="id"><![CDATA[attributes.uriParams.'id']]></ee:set-variable>
+                <ee:set-variable variableName="menuId"><![CDATA[attributes.uriParams.'menuId']]></ee:set-variable>
+                <ee:set-variable variableName="menuItemId"><![CDATA[attributes.uriParams.'menuItemId']]></ee:set-variable>
+                <ee:set-variable variableName="originalPayload"><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-variable>
             </ee:variables>
         </ee:transform>
+        <flow-ref doc:name="Update MenuItem By MenuItemId" doc:id="f0555730-c721-4c0d-bf39-e8ceb198a7f1" name="updateaMenuItemByMenuItemId" />
         <ee:transform doc:name="Transform Message">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
@@ -442,17 +447,27 @@ output application/json
                 <ee:set-variable variableName="menuItemId">attributes.uriParams.'menuItemId'</ee:set-variable>
             </ee:variables>
         </ee:transform>
-        <ee:transform doc:name="Transform Message">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
+		<flow-ref doc:name="deleteMenuItemByMenuitemId" doc:id="3c84bb42-3c60-4a6e-98b5-20f6f2b296ac" name="deleteMenuItemByMenuItemId"/>
+		<ee:transform doc:name="Transform Message1" doc:id="3d73141f-9c85-4745-bae1-a4b7f144564e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
 ---
-{
+if(payload ==1){
   status: "200",
-  message: "MenuItem with id {id} is Deleted"
+  message: "MenuItem with id " ++ vars.menuItemId ++ " is Deleted"
+}else{
+  status: "404",
+  message: "MenuItem with id " ++ vars.menuItemId ++ " is Not found"
 }]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="httpStatus" ><![CDATA[%dw 2.0
+output application/java
+---
+if(payload >=1) "200" else  "404"]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
     </flow>
     <flow name="get:\restaurants\(id)\menus\(menuId)\menuItems\(menuItemId)\inventory:swiggy-restaurants-sapi-config">
         <ee:transform doc:name="Transform Message">
@@ -462,20 +477,20 @@ output application/json
                 <ee:set-variable variableName="menuItemId">attributes.uriParams.'menuItemId'</ee:set-variable>
             </ee:variables>
         </ee:transform>
-        <ee:transform doc:name="Transform Message">
+        <flow-ref doc:name="getMenuItemInventoryByMenuItemId" doc:id="5f7a96ea-aaf7-4c52-8d96-f2a31672185f" name="getMenuItemInventoryByMenuItemId"/>
+		<ee:transform doc:name="Transform Message">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 {
-  menuItemId: 101,
-  quantity: 200,
-  descountPercentage: 10,
+  menuItemId: payload.menu_item_id,
+  quantity: payload.quantity,
+  descountPercentage: payload.discount_percentage,
   links: [
     {
       linkName: "menuItem",
-      href: "http://localhost:8081/restaurants/1/menus/1/menuItems/101"
-    }
+      href: "/api/restaurants/"++ vars.id as String ++"/menus/"++ vars.menuId as String ++"/menuItems/"++ vars.menuItemId as String    }
   ]
 }]]></ee:set-payload>
             </ee:message>
@@ -488,7 +503,7 @@ output application/json
                 <ee:set-variable variableName="menuId">attributes.uriParams.'menuId'</ee:set-variable>
             </ee:variables>
         </ee:transform>
-        <flow-ref doc:name="getallmenuItemsbymenuid" doc:id="d5e0368d-083c-4481-bcdf-e39bc42ba4ec" name="getallmenuItemsbymenuid"/>
+        <flow-ref doc:name="getallmenuItemsbymenuid" doc:id="d5e0368d-083c-4481-bcdf-e39bc42ba4ec" name="getallmenuItemsbymenuid" />
     </flow>
     <flow name="get:\restaurants\(id)\menus\(menuId):swiggy-restaurants-sapi-config">
         <ee:transform doc:name="Transform Message">
@@ -497,10 +512,10 @@ output application/json
                 <ee:set-variable variableName="menuId">attributes.uriParams.'menuId'</ee:set-variable>
             </ee:variables>
         </ee:transform>
-        <flow-ref doc:name="getmenubymenuId" doc:id="77e83519-5299-46f0-ab1f-3afc71d3289a" name="getmenubymenuId"/>
-		<ee:transform doc:name="Transform Message1" doc:id="e15442a3-8d27-4b26-95c9-bcc52020d983" >
-			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
+        <flow-ref doc:name="getmenubymenuId" doc:id="77e83519-5299-46f0-ab1f-3afc71d3289a" name="getmenubymenuId" />
+        <ee:transform doc:name="Transform Message1" doc:id="e15442a3-8d27-4b26-95c9-bcc52020d983">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
 output application/json
 import dw::core::Strings
 
@@ -525,8 +540,8 @@ var item =payload
 	]
 	
 }]]></ee:set-payload>
-			</ee:message>
-		</ee:transform>
+            </ee:message>
+        </ee:transform>
     </flow>
     <flow name="get:\restaurants\(id)\menus\(menuId)\menuItems\(menuItemId):swiggy-restaurants-sapi-config">
         <ee:transform doc:name="Transform Message">
@@ -536,27 +551,32 @@ var item =payload
                 <ee:set-variable variableName="menuItemId">attributes.uriParams.'menuItemId'</ee:set-variable>
             </ee:variables>
         </ee:transform>
-        <ee:transform doc:name="Transform Message">
+        <flow-ref doc:name="getmenuitembyid" doc:id="52f884c1-4f76-4a98-969c-fdae9659ff19" name="getmenuitembyid" />
+        <ee:transform doc:name="MapdatatoMenuItem" doc:id="837513ba-efcb-48e4-bd3f-481012661612">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
 output application/json
+
+var item = payload
 ---
 {
-  menuItemId: 101,
-  itemName: "Chicken Biriyani",
-  description: "Yummy Hyderabadi Biriyani",
-  price: 500,
-  menuId: 1,
-  links: [
+	menuItemId: item.menu_item_id, 
+  itemName: item.item_name,
+  description: item.item_description,
+  price: item.price,
+  menuId: item.menu_id,
+   "links": [
     {
-      linkName: "menu",
-      href: "http://localhost:8081/restaurants/1/menus/1"
-    }, 
+      "linkName": "menu",
+      "href": "/api/restaurants" ++ vars.id as String ++"/menus/" ++ vars.menuId as String
+    },
     {
-      linkName: "menuItemInventory",
-      href: "http://localhost:8081/restaurants/1/menus/1/menuItems/101/inventory"
+      "linkName": "menuItemInventory",
+      "href": "/api/restaurants" ++ vars.id as String ++"/menus/" ++ vars.menuId as String 
+      			++ "/menuItems/" ++ item.menu_item_id as String++ "/inventory"
     }
-  ]
+    
+    ]
 }]]></ee:set-payload>
             </ee:message>
         </ee:transform>
@@ -568,10 +588,10 @@ output application/json
                 <ee:set-variable variableName="menuId">attributes.uriParams.'menuId'</ee:set-variable>
             </ee:variables>
         </ee:transform>
-        <flow-ref doc:name="AddaNewMenuItem" doc:id="5a6e1af6-5439-4a62-9f04-d6ae4f9bfe4e" name="AddaNewMenuItem"/>
-		<ee:transform doc:name="Add Location Header" doc:id="7cbdc91e-f1b4-42ee-8d0e-7703e141c4cc" >
-			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
+        <flow-ref doc:name="AddaNewMenuItem" doc:id="5a6e1af6-5439-4a62-9f04-d6ae4f9bfe4e" name="AddaNewMenuItem" />
+        <ee:transform doc:name="Add Location Header" doc:id="7cbdc91e-f1b4-42ee-8d0e-7703e141c4cc">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 {menuItemId : payload.generatedKeys.GENERATED_KEY} 
@@ -591,16 +611,16 @@ output application/json
     ]
     
     }]]></ee:set-payload>
-			</ee:message>
-			<ee:variables >
-				<ee:set-variable variableName="outboundHeaders" ><![CDATA[%dw 2.0
+            </ee:message>
+            <ee:variables>
+                <ee:set-variable variableName="outboundHeaders"><![CDATA[%dw 2.0
 output application/java
 ---
 {
 	location: vars.requestUri as String ++ '/' ++ 
 				(payload.generatedKeys.GENERATED_KEY as String) default ""
 }]]></ee:set-variable>
-			</ee:variables>
-		</ee:transform>
+            </ee:variables>
+        </ee:transform>
     </flow>
 </mule>

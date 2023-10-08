@@ -6,7 +6,7 @@
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
 	<sub-flow name="updaterestaurantbyid" doc:id="046ab6cc-d3b4-4977-9277-243e8eac5734" >
-		<db:select doc:name="Select" doc:id="ed5ff156-e235-4840-8015-e3ec575fc1a4" config-ref="Database_Config">
+		<db:select doc:name="Select" doc:id="18bf97dc-6da2-49cc-91a0-d6887789dc28" config-ref="Database_Config">
 			<db:sql><![CDATA[select * from restaurant where restaurant_id = :id ]]></db:sql>
 			<db:input-parameters><![CDATA[#[{
 	id: vars.id as Number 
@@ -16,7 +16,7 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 			<when expression="#[isEmpty(payload)]">
 				<raise-error doc:name="Raise error" doc:id="00208df1-f55f-4625-b5bc-9a57c8290ea7" type="APP:DOESNOT_EXIST" description="Restaurant Doen't Exist"/>
 			</when>
-			<otherwise>
+			<otherwise >
 				<ee:transform doc:name="Transform Message" doc:id="a697799c-485c-415c-b451-e14a5e2f56d4">
 			<ee:message>
 			</ee:message>
@@ -38,7 +38,7 @@ var restaurant =payload[0]
 				<db:update doc:name="Update" doc:id="8bed1fc7-d2ad-47e9-8cfd-088bb460e310" config-ref="Database_Config">
 			<db:sql><![CDATA[update restaurant set name= :name , house_number= :house_number,street = :street,city= :city,pincode=:pincode
 where restaurant_id = :id]]></db:sql>
-					<db:input-parameters ><![CDATA[#[{
+					<db:input-parameters><![CDATA[#[{
 	id: vars.id,
 	name: vars.restaurant.name,
 	house_number: vars.restaurant.house_number,

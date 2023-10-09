@@ -1,0 +1,17 @@
+%dw 2.0
+
+type auto_74c2ac41_d355_4291_af11_22265542ebca_Input_Payload = {
+  address: {
+    pincode: String, 
+    city: String, 
+    street: String, 
+    houseNumber: String, 
+    addressId: Number, 
+    _?: Any
+  }, 
+  name: String, 
+  links: Array<{    href: String,     linkName: String,     _?: Any  }>, 
+  restaurantId: Number, 
+  _?: Any
+}
+

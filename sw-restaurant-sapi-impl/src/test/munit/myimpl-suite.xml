@@ -31,6 +31,7 @@
 		</munit:behavior>
 		<munit:execution >
 			<flow-ref doc:name="Flow-ref to postRestaurantById" doc:id="b0ef973d-354b-4984-81cf-7abea55f9196" name="postRestaurantById"/>
+			<logger level="INFO" doc:name="Logger" doc:id="5195e997-7d8a-4265-9c79-776a6b9273b9" />
 		</munit:execution>
 		<munit:validation >
 			<munit-tools:assert doc:name="Assert payload" doc:id="d037b5cd-d11d-45bf-8295-dd5733d17211" message="The payload does not match">

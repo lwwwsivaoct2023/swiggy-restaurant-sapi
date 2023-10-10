@@ -1,12 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns="http://www.mulesoft.org/schema/mule/core"
-	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
-http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
-	<configuration-properties doc:name="Configuration properties" doc:id="0ee4205a-aa02-4505-a149-e5dfe08e2bf7" file="swiggy-${env}.yaml" />
-	<global-property doc:name="Global Property" doc:id="481d5395-45e7-46e8-afe1-97118cb5fae8" name="env" value="dev" />
-	<db:config name="Database_Config" doc:name="Database Config" doc:id="b13c3f7a-21f0-49d7-a801-98b9dd419a9a" >
-		<db:my-sql-connection host="${db.host}" port="3306" user="${db.username}" password="${db.password}" database="${db.name}" />
+<mule xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd">
+	<configuration-properties doc:name="Configuration properties" doc:id="dffa845c-ef4c-4be6-89d0-cf571fbb892a" file="swiggy-${env}.yaml" />
+	<global-property doc:name="Global Property" doc:id="f80a74b7-606b-4097-b450-617c3fc5a6c1" name="env" value="dev" />
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="224efdd2-96c9-47f6-9578-714cbc519acb" >
+		<db:my-sql-connection host="${db.host}" port="3306" user="${secure::db.username}" password="${secure::db.password}" database="${db.name}"/>
 	</db:config>
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="aef9022b-d1d9-4f14-86ff-4db8afa0066e" file="swiggy-${env}-secure.yaml" key="qazwsxedcrfvtgby" >
+		<secure-properties:encrypt algorithm="Blowfish" />
+	</secure-properties:config>
 </mule>

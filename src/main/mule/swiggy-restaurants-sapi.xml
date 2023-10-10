@@ -128,29 +128,13 @@ output application/json
 			<ee:message >
 			</ee:message>
 			<ee:variables >
-				<ee:set-variable variableName="requestUri" ><![CDATA[%dw 2.0
-output application/java
+				<ee:set-variable variableName="rid" ><![CDATA[%dw 2.0
+output application/json
 ---
-attributes.requestUri as String]]></ee:set-variable>
-				<ee:set-variable variableName="name" ><![CDATA[%dw 2.0
-output application/java
----
-(attributes.queryParams.name default "") as String]]></ee:set-variable>
-				<ee:set-variable variableName="page" ><![CDATA[%dw 2.0
-output application/java
----
-if(attributes.queryParams.page as Number != 0 ) 
-	(attributes.queryParams.page as Number)
- else  1]]></ee:set-variable>
-				<ee:set-variable variableName="pageSize" ><![CDATA[%dw 2.0
-output application/java
----
-if(attributes.queryParams.pageSize as Number != 0 ) 
-	(attributes.queryParams.pageSize as Number)
- else  2]]></ee:set-variable>
+attributes.queryParams.rid]]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
-		<flow-ref doc:name="getallrestaurants" doc:id="bbe07f2d-f518-4908-bc67-b08941c85888" name="getallrestaurants"/>
+		<flow-ref doc:name="getallrestaurants" doc:id="bbe07f2d-f518-4908-bc67-b08941c85888" name="getarestaurantsbyId" />
 		<logger level="INFO" message="get:\restaurants:swiggy-restaurants-sapi-config" />
     </flow>
 </mule>

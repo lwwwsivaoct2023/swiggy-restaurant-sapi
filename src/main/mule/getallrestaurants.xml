@@ -5,50 +5,24 @@
 	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-	<flow name="getallrestaurants" doc:id="36373bc2-fa05-42a0-b729-90b5b6887b58" >
+	<flow name="getarestaurantsbyId" doc:id="36373bc2-fa05-42a0-b729-90b5b6887b58" >
 		<db:select doc:name="Select" doc:id="22654ad4-cc28-4046-be82-b9788991b6fb" config-ref="Database_Config">
-			<db:sql ><![CDATA[select * from restaurant where name  like  :restaurantname
-LIMIT :mylimit OFFSET :myoffset]]></db:sql>
-			<db:input-parameters ><![CDATA[#[%dw 2.0
-var pageSize = (vars.pageSize default 2)  as Number
-var page =  vars.page  default 1 as Number
----
-{
-	restaurantname: '%' ++ (vars.name default " "  as String) ++ "%",
-	mylimit: pageSize default 2 as Number,
-	myoffset: (page -1)* (pageSize) as Number
+			<db:sql ><![CDATA[select * from restaurant where restaurant_id = :restaurantid
+]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	restaurantid: vars.rid as String
 }]]]></db:input-parameters>
 		</db:select>
-		<ee:transform doc:name="Transform Message" doc:id="966f444e-ebdc-492a-86ce-555efbca8e1f" >
+		<ee:transform doc:name="Transform Message" doc:id="8fe19ae9-01fa-4a61-aedc-52a032afea7c" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
 ---
-payload map (item,index) ->{
-	restaurantId: item.restaurant_id,
-	name: item.name,
-	address:{
-		houseNumber: item.house_number,
-		street: item.street,
-		city:item.city,
-		pincode: item.pincode
-	},
-	links:[
-		{
-			linkName: "menus",
-			href: vars.requestUri as String ++ '/' ++ 
-					item.restaurant_id as String++ "/menus"
-		}
-	]
+ payload map (item,index) ->{
+	restaurantId: item.restaurant_id
 	
 }]]></ee:set-payload>
 			</ee:message>
-			<ee:variables >
-				<ee:set-variable variableName="httpStatus" ><![CDATA[%dw 2.0
-output application/java
----
-200]]></ee:set-variable>
-			</ee:variables>
 		</ee:transform>
 	</flow>
 </mule>

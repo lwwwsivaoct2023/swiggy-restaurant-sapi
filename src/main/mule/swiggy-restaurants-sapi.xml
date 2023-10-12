@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd ">
     <http:listener-config name="swiggy-restaurants-sapi-httpListenerConfig">
-        <http:listener-connection host="0.0.0.0" port="8081" />
+        <http:listener-connection host="0.0.0.0" port="${http.port}" />
     </http:listener-config>
-    <apikit:config name="swiggy-restaurants-sapi-config" api="resource::d0205d5f-f064-4d78-b0f0-1e4d55cdf281:swiggy-restaurants-sapi:2.0.5:raml:zip:swiggy-restaurants-sapi.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <apikit:config name="swiggy-restaurants-sapi-config" api="resource::d0205d5f-f064-4d78-b0f0-1e4d55cdf281:swiggy-restaurants-sapi:2.0.6:raml:zip:swiggy-restaurants-sapi.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
     <flow name="swiggy-restaurants-sapi-main">
         <http:listener config-ref="swiggy-restaurants-sapi-httpListenerConfig" path="/api/*">
             <http:response statusCode="#[vars.httpStatus default 200]">
@@ -447,10 +447,10 @@ output application/json
                 <ee:set-variable variableName="menuItemId">attributes.uriParams.'menuItemId'</ee:set-variable>
             </ee:variables>
         </ee:transform>
-		<flow-ref doc:name="deleteMenuItemByMenuitemId" doc:id="3c84bb42-3c60-4a6e-98b5-20f6f2b296ac" name="deleteMenuItemByMenuItemId"/>
-		<ee:transform doc:name="Transform Message1" doc:id="3d73141f-9c85-4745-bae1-a4b7f144564e" >
-			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
+        <flow-ref doc:name="deleteMenuItemByMenuitemId" doc:id="3c84bb42-3c60-4a6e-98b5-20f6f2b296ac" name="deleteMenuItemByMenuItemId" />
+        <ee:transform doc:name="Transform Message1" doc:id="3d73141f-9c85-4745-bae1-a4b7f144564e">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 if(payload ==1){
@@ -460,14 +460,14 @@ if(payload ==1){
   status: "404",
   message: "MenuItem with id " ++ vars.menuItemId ++ " is Not found"
 }]]></ee:set-payload>
-			</ee:message>
-			<ee:variables >
-				<ee:set-variable variableName="httpStatus" ><![CDATA[%dw 2.0
+            </ee:message>
+            <ee:variables>
+                <ee:set-variable variableName="httpStatus"><![CDATA[%dw 2.0
 output application/java
 ---
 if(payload >=1) "200" else  "404"]]></ee:set-variable>
-			</ee:variables>
-		</ee:transform>
+            </ee:variables>
+        </ee:transform>
     </flow>
     <flow name="get:\restaurants\(id)\menus\(menuId)\menuItems\(menuItemId)\inventory:swiggy-restaurants-sapi-config">
         <ee:transform doc:name="Transform Message">
@@ -477,8 +477,8 @@ if(payload >=1) "200" else  "404"]]></ee:set-variable>
                 <ee:set-variable variableName="menuItemId">attributes.uriParams.'menuItemId'</ee:set-variable>
             </ee:variables>
         </ee:transform>
-        <flow-ref doc:name="getMenuItemInventoryByMenuItemId" doc:id="5f7a96ea-aaf7-4c52-8d96-f2a31672185f" name="getMenuItemInventoryByMenuItemId"/>
-		<ee:transform doc:name="Transform Message">
+        <flow-ref doc:name="getMenuItemInventoryByMenuItemId" doc:id="5f7a96ea-aaf7-4c52-8d96-f2a31672185f" name="getMenuItemInventoryByMenuItemId" />
+        <ee:transform doc:name="Transform Message">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -486,7 +486,7 @@ output application/json
 {
   menuItemId: payload.menu_item_id,
   quantity: payload.quantity,
-  descountPercentage: payload.discount_percentage,
+  discountPercentage: payload.discount_percentage,
   links: [
     {
       linkName: "menuItem",

@@ -6,7 +6,7 @@
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
 	<flow name="getallrestaurants" doc:id="36373bc2-fa05-42a0-b729-90b5b6887b58" >
-		<db:select doc:name="Select" doc:id="22654ad4-cc28-4046-be82-b9788991b6fb" config-ref="Database_Config">
+		<db:select doc:name="Select" doc:id="22654ad4-cc28-4046-be82-b9788991b6fb">
 			<db:sql ><![CDATA[select * from restaurant where name  like  :restaurantname
 LIMIT :mylimit OFFSET :myoffset]]></db:sql>
 			<db:input-parameters ><![CDATA[#[%dw 2.0

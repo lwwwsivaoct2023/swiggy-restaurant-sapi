@@ -16,7 +16,7 @@
             </http:error-response>
         </http:listener>
         <apikit:router config-ref="swiggy-restaurants-sapi-config" />
-        <error-handler>
+        <error-handler> 
             <on-error-propagate type="APIKIT:BAD_REQUEST">
                 <ee:transform doc:name="Transform Message">
                     <ee:message>
@@ -283,29 +283,27 @@ output application/json
                 <ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
             </ee:variables>
         </ee:transform>
-        <ee:transform doc:name="Transform Message">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
+        <flow-ref doc:name="getarestaurantsbyId" doc:id="ef1c37ba-0030-4763-acb6-5d952f6ed314" name="getarestaurantsbyId"/>
+		<ee:transform doc:name="Transform Message1" doc:id="fc9a926e-7beb-46cb-ad7c-6cba69183caa" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
 ---
 {
-  restaurantId: 1,
-  name: "Udupi Garden",
-  address: {
-    houseNumber: "202",
-    street: "Some Street",
-    city: "Bangalore",
-    pincode: "560066"
-  },
-  links: [
-    {
-      linkName: "menus",
-      href: "http://localhost:8081/restaurants/1/menus"
-    }
-  ]
+	restaurantId: (payload.restaurantId default 0),
+	adress: name: payload.name,
+	address: {
+		pincode: payload.pincode as String,
+		city: payload.city as String,
+		street: payload.street as String,
+		houseNumber: payload.house_number as String
+	},
+	name: payload.name as String,
+	city: payload.city,
+	pincode: payload.pincode
 }]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+			</ee:message>
+		</ee:transform>
     </flow>
     <flow name="get:\restaurants\(id)\menus\(menuId):swiggy-restaurants-sapi-config">
         <ee:transform doc:name="Transform Message">

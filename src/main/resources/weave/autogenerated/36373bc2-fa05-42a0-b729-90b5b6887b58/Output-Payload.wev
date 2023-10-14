@@ -1,0 +1,7 @@
+%dw 2.0
+
+type auto_36373bc2_fa05_42a0_b729_90b5b6887b58_Output_Payload = Array<{  address: {    pincode: Number,     city: String,     street: String,     houseNumber: Number,     _?: Any  },   name: String,   links: Array<{    href: String,     linkName: String,     _?: Any  }>, 
+  restaurantId: Number, 
+  _?: Any
+}>
+

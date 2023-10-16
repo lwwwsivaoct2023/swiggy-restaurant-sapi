@@ -1,10 +1,10 @@
 #%RAML 1.0 ResourceType
 description: Add a new <<resourcePathName !singularize>>
 displayName: Add new <<resourcePathName | !singularize>>
-  body:
+body:
     application/json:
-      type: <<resourcePathName | !singularize | !uppercamelcase>>Request
-  responses: 
+      type: <<resourcePathName | !singularize |!uppercamelcase>>Request
+responses: 
     201:
       headers: 
         Location:

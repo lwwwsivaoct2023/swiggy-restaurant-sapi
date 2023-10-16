@@ -1,6 +1,11 @@
 #%RAML 1.0 DataType
 properties:
-  customert: String
-  address: 
+  customer: string
+  address: !include Address.raml
+  links: 
+    type: array
+    
+    
+examples: !include ../examples/customer.raml 
 
   example

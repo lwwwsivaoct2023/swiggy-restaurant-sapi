@@ -4,10 +4,11 @@ baseUri: http://localhost:8081/api
 mediaType: application/json
 types:
   customer: !include datatypes/Customer.raml
-
 traits:
   Pageable: !include traits/Pageable.raml
-  
+resourceTypes:
+  collection: !include resources/collection.raml
+  member: !include resources/member.raml
 
 
 /customers:

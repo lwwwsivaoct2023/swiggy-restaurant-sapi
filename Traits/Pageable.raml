@@ -1,1 +1,12 @@
 #%RAML 1.0 Trait
+queryParameters:
+      page:
+        type: integer
+        minimum: 2
+        default: 10
+        required: false
+      pageSize:
+        type: integer
+        minimum: 5
+        default: 5
+        required: false

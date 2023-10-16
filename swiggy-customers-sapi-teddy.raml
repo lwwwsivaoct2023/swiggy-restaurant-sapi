@@ -4,7 +4,7 @@ baseUri: http://localhost:8081/api
 mediaType: application/json
 types:
   customer: !include datatypes/Customer.raml
-  
+  Address: !include datatypes/Address.raml
 traits:
   Pageable: !include traits/Pageable.raml
 resourceTypes:
@@ -14,7 +14,6 @@ resourceTypes:
 
 /customers:
   post:
-    body:
         type: 
     responses:
       201:

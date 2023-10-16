@@ -3,7 +3,7 @@ title: swiggy-customers-sapi-Teddy
 baseUri: http://localhost:8081/api
 mediaType: application/json
 types:
-  customer:
+  customer: !include Customer.raml
   ErorrMessage:
 
 
@@ -36,7 +36,10 @@ types:
         default: 10
         required: false
       pageSize:
-        
+        type: integer
+        minimum: 5
+        default: 5
+        required: false
     responses:
       200:
         body:

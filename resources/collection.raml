@@ -1,19 +1,19 @@
 #%RAML 1.0 ResourceType
-description: Add a new <<resourcePathName !singularize>>
-displayName: Add new <<resourcePathName | !singularize>>
-body:
+post?:
+  description: Add a new <<resourcePathName | !singularize>>
+  displayName: Add new <<resourcePathName | !singularize>>
+  body:
     application/json:
-      type: <<resourcePathName | !singularize |!uppercamelcase>>Request
-responses: 
+      type: <<resourcePathName | !singularize | !uppercamelcase>>Request
+  responses: 
     201:
       headers: 
         Location:
           description: URL of the new <<resourcePathName | !singularize>> information
           example: /<<resourcePathName>>/8f19cb50-3f57-4d38
       body: 
-        properties:
-             message: string
-    503:
+       type: <<resourcePathName | !singularize | !uppercamelcase>>
+    500:
       body:
         application/json:  
           type: !include ../datatypes/ErrorMessage.raml

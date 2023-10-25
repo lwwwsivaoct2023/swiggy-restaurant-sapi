@@ -4,7 +4,11 @@ baseUri: http://localhost:8081/api
 mediaType: application/json
 types:
   Customer: !include datatypes/Customer.raml
+  CustomerRequest: !include datatypes/CustomerRequest.raml
+  UpdateCustomerRequest: !include datatypes/UpdateCustomerRequest.raml
   Address: !include datatypes/Address.raml
+  AddressRequest: !include datatypes/AddressRequest.raml
+  
 traits:
   Pageable: !include traits/Pageable.raml
 resourceTypes:
@@ -13,41 +17,29 @@ resourceTypes:
 
 
 /customers:
-  post:
-    body:
-        type: Customer
-    responses:
-      201:
-        body:
-            type: string
-      409:
-        body:
-            type: string
-
-      500:
-        body:
-            type: string
-          
+ 
+  type:
+    collection
   get:
     is: [Pageable]
-    description: Get All Customers
-    
+      
     responses:
       200:
         body:
-            
-      500:
-        
-            
+          application/json:            
+            type: Customer[]
+  post: 
+   
+     
+  /{id}:
+    type:
+      member
+    get:  
+    put:     
 
-
-
-
-                   
-    
       
-  
-
-  
-        
-          
+      
+    /addresses:
+      type:
+        collection
+      post:

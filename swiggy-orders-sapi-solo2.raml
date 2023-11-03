@@ -8,9 +8,10 @@ resourceTypes:
  collection: !include resourceTypes/collection.raml
 traits:
  pageable: !include traits/pageable.raml
+ 
   
 types:
-  Order: !include dataTypes/Order.raml
+  Order: !include /dataTypes/Order.raml
   OrderItem: !include dataTypes/OrderItem.raml
   ErrorMessage: !include dataTypes/ErrorMessage.raml
   OrderRequest: !include dataTypes/OrderRequest.raml

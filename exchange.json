@@ -3,7 +3,7 @@
   "name": "Swiggy-orders-sapi-solo2",
   "groupId": "d0205d5f-f064-4d78-b0f0-1e4d55cdf281",
   "assetId": "swiggy-orders-sapi-solo2",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "classifier": "raml",
   "tags": [],
   "descriptorVersion": "1.0.0",
